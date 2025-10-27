@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-#from api.routers import stk_push, b2c, websocket
+from api.routers import  websocket
 from api.security_middleware import payment_security_middleware
 
 
@@ -19,7 +19,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-
 # ✅ Add security middleware using decorator
 app.middleware("http")(payment_security_middleware)
 
@@ -32,6 +31,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ✅ Include routers
+#app.include_router(stk_push.router, prefix="/api/v1/stk-push", tags=["STK Push"])
+#app.include_router(b2c.router, prefix="/api/v1/b2c", tags=["B2C"])
+app.include_router(websocket.router, tags=["WebSocket"])  # 👈 this line adds ws://127.0.0.1:8000/ws/payments
 
 @app.get("/")
 async def root():
