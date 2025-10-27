@@ -1,1 +1,236 @@
-# mpesabeginner
+# M-Pesa Integration Setup Guide
+- frontend: https://madegwa-kidii.github.io/mpesabeginner/
+- backend: https://mpesabeginner.vercel.app/
+## Prerequisites
+
+- Python 3.9 or higher
+- pip (Python package manager)
+- Virtual environment tool (venv, virtualenv, or conda)
+- M-Pesa Daraja API credentials
+
+## Installation Steps
+
+### 1. Create Virtual Environment
+
+```bash
+# Using venv (recommended)
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+
+# On macOS/Linux:
+source venv/bin/activate
+```
+
+### 2. Install Dependencies
+
+**For Development:**
+```bash
+pip install -r requirements.txt
+```
+
+**For Development with dev tools:**
+```bash
+pip install -r requirements-dev.txt
+```
+
+**For Production:**
+```bash
+pip install -r requirements-prod.txt
+```
+
+### 3. Environment Configuration
+
+Create a `.env` file in the project root:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your M-Pesa credentials:
+
+```env
+# M-Pesa API Credentials
+CONSUMER_KEY=your_consumer_key_here
+CONSUMER_SECRET=your_consumer_secret_here
+
+# Business Configuration
+BUSINESS_SHORT_CODE=174379
+PASSKEY=your_passkey_here
+INITIATOR_NAME=testapi
+INITIATOR_PASSWORD=your_initiator_password
+
+# API URLs
+BASE_URL=https://sandbox.safaricom.co.ke
+# For production: BASE_URL=https://api.safaricom.co.ke
+
+# Callback URLs (must be publicly accessible)
+CALLBACK_BASE_URL=https://yourdomain.com
+STK_CALLBACK_URL=${CALLBACK_BASE_URL}/api/v1/stk-push/callback
+B2C_RESULT_URL=${CALLBACK_BASE_URL}/api/v1/b2c/result
+B2C_TIMEOUT_URL=${CALLBACK_BASE_URL}/api/v1/b2c/timeout
+B2B_RESULT_URL=${CALLBACK_BASE_URL}/api/v1/b2b/result
+B2B_TIMEOUT_URL=${CALLBACK_BASE_URL}/api/v1/b2b/timeout
+
+# Security
+SECURITY_CREDENTIAL=encrypted_password_here
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8000
+DEBUG=True
+RELOAD=True
+
+# Database (Optional)
+DATABASE_URL=postgresql://user:password@localhost:5432/mpesa_db
+# For SQLite: DATABASE_URL=sqlite:///./mpesa.db
+
+# Redis (Optional - for caching)
+REDIS_URL=redis://localhost:6379/0
+
+# Logging
+LOG_LEVEL=INFO
+```
+
+### 4. Database Setup (Optional)
+
+If using a database:
+
+```bash
+# Create database migrations
+alembic init alembic
+
+# Run migrations
+alembic upgrade head
+```
+
+### 5. Run the Application
+
+**Development Mode:**
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Production Mode:**
+```bash
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+### 6. Verify Installation
+
+Open your browser and navigate to:
+- API Documentation: http://localhost:8000/docs
+- Alternative Docs: http://localhost:8000/redoc
+- Health Check: http://localhost:8000/health
+
+## Testing
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=. --cov-report=html
+
+# Run specific test file
+pytest tests/test_stk_push.py -v
+```
+
+## Common Issues
+
+### Issue: ModuleNotFoundError
+**Solution:** Ensure virtual environment is activated and dependencies are installed
+
+### Issue: Pydantic validation errors
+**Solution:** Check your `.env` file has all required variables
+
+### Issue: M-Pesa API authentication fails
+**Solution:** 
+- Verify Consumer Key and Consumer Secret are correct
+- Check if you're using correct base URL (sandbox vs production)
+- Ensure access token is being generated
+
+### Issue: Callbacks not received
+**Solution:**
+- Ensure callback URLs are publicly accessible (use ngrok for local testing)
+- Check firewall settings
+- Verify URLs in M-Pesa portal match your configuration
+
+## Using ngrok for Local Development
+
+For testing callbacks locally:
+
+```bash
+# Install ngrok
+# Download from https://ngrok.com/download
+
+# Start ngrok tunnel
+ngrok http 8000
+
+# Update CALLBACK_BASE_URL in .env with ngrok URL
+CALLBACK_BASE_URL=https://your-ngrok-url.ngrok.io
+```
+
+## Production Deployment
+
+### Using Docker
+
+```bash
+# Build image
+docker build -t mpesa-integration .
+
+# Run container
+docker run -d -p 8000:8000 --env-file .env mpesa-integration
+```
+
+### Environment Variables for Production
+
+Ensure these are set securely:
+- Use secrets manager (AWS Secrets Manager, Azure Key Vault, etc.)
+- Never commit `.env` to version control
+- Use strong passwords
+- Enable HTTPS for all callback URLs
+- Set DEBUG=False
+
+## Updating Dependencies
+
+```bash
+# Update all packages
+pip install --upgrade -r requirements.txt
+
+# Check for security vulnerabilities
+safety check
+
+# Update specific package
+pip install --upgrade package-name
+```
+
+## Support
+
+For issues:
+1. Check M-Pesa Daraja documentation: https://developer.safaricom.co.ke/
+2. Review logs in `logs/` directory
+3. Enable DEBUG mode for detailed error messages
+4. Check M-Pesa API status page
+
+## Security Best Practices
+
+1. **Never commit secrets** - Use `.gitignore` for `.env` files
+2. **Use HTTPS** - All callbacks must use secure connections
+3. **Validate inputs** - Pydantic models handle this automatically
+4. **Encrypt sensitive data** - Use proper encryption for initiator passwords
+5. **Implement rate limiting** - Protect your endpoints
+6. **Monitor logs** - Track all transactions and errors
+7. **Use environment-specific configs** - Separate dev, staging, and production
+
+## Next Steps
+
+1. Configure your M-Pesa sandbox account
+2. Test STK Push in sandbox environment
+3. Implement callback handlers
+4. Add database models for transaction tracking
+5. Set up monitoring and alerting
+6. Deploy to production
+7. Apply for production credentials from Safaricom
