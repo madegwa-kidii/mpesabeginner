@@ -2,5 +2,6 @@ fastapi
 uvicorn
 httpx
 pydantic
+pydantic-settings
 pycryptodome
 python-dotenv
