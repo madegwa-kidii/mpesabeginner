@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from api.routers import  websocket
+from api.routers import stk_push, b2c, websocket
 from api.security_middleware import payment_security_middleware
 
 
