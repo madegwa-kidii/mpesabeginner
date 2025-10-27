@@ -1,2 +1,6 @@
-uvicorn
 fastapi
+uvicorn
+httpx
+pydantic
+pycryptodome
+python-dotenv
